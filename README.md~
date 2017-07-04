@@ -1,6 +1,7 @@
-# Spread Sheet 
+# Spread Sheet
 
-The spread sheet helps in by adding row and reading rows by providing 'from_row', 'to_row' params present in spread sheet.
+  The spread sheet helps in by adding row and reading rows by providing 'from_row', 'to_row' params present in spread sheet.
+
 
 ##In order to add a row, a person must following info :-
 
