@@ -1,11 +1,11 @@
 # Spread Sheet
 
-  The spread sheet helps in by adding row and reading rows by providing 'from_row', 'to_row' params present in spread sheet.
+  The spread sheet helps in by adding rows and reading rows by providing 'from_row', 'to_row' params present in spread sheet.
 
 
 ##In order to add a row, a person must following info :-
 
-1. Row (you want to add in spread sheet)
+1. Rows (you want to add in spread sheet)
 2. Filepath (path where your spreadsheet resides)
 3. Sheet Name (Name of your sheet where yoou want to add row)
 
@@ -17,12 +17,12 @@
 #### Step 2. spreadSheet.addRow(row,filePath,sheetName,function(err,result){}).
 
 #### Step 3. Arguments behaviour:-
-     
+
       1. Row
 
          It must be string.
 
-         var row = "1,'hello',2,'Cooking'";
+         var row = [[1,2,3],['a',45,56]]; // To add multiple rows.
 
       2. filePath
 
@@ -50,7 +50,7 @@
 #### Step 2. spreadSheet.getRows(filepath,sheet_name,from_row,to_row,function(err,result){}).
 
 #### Step 3. Arguments behaviour:-
-     
+
       1. fromRow
 
          It must be string/numeric.
@@ -74,4 +74,3 @@
       5. Last argument is the callback (cb), which accepts error and result.   
 
  It will fetch only those rows mentioned in from_row to to_row from spreadsheet.     
-

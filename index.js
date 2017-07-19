@@ -1,214 +1,105 @@
-exports.addRow = function(row,filepath,sheet_name,output){
+exports.addRow = function(row,filepath,sheet_name,cb){
 
 var XLSX = require('xlsx');
+var excelrange = require('excelrange');
+  var mapAlpha = {
+    A:1,
+    B:2,
+    C:3,
+    D:4,
+    E:5,
+    F:6,
+    G:7,
+    H:8,
+    I:9,
+    J:10,
+    K:11,
+    L:12,
+    M:13,
+    N:14,
+    O:15,
+    P:16,
+    Q:17,
+    R:18,
+    S:19,
+    T:20,
+    U:21,
+    V:22,
+    W:23,
+    X:24,
+    Y:25,
+    Z:26
+  };
 
-    var data = String(row).split(',').map((i)=>{
-      return i.trim();
-    }).filter((i)=>{
-      return i;
-    });
+  var data = row
 
-    data = Array(data);
+  var wb = XLSX.readFile(filepath);
+  var worksheet = wb.Sheets[sheet_name]
+  var ref = worksheet['!ref']
+  var rowNumber = 1
+  var keyPrefix = null
+  var refDefined = ref ? true : false
 
-    var ws_name = "SheetJS";
-    var workbook;
-    var path = filepath;
-    var last_column;
+  if(refDefined){
+    var lastRow = ref.match(/(\d+$)/)
 
-    /*sheet_from_array_of_arrays function will
-      convert the row we want to add into worksheet format(ws),
-      in order to make the workbook.
-    */
+    if(lastRow){
+      rowNumber = Number(lastRow[0]) + 1
+    }
+      ref = ref.split(':')
+    keyPrefix = ref[1].match(/^([a-zA-Z])+/)
+    if(keyPrefix){
+      keyPrefix = keyPrefix[0];
+    }
+  }else{
+    ref = ['A1', 'A1']
+  }
 
-    function sheet_from_array_of_arrays(data) {
-     if (!Array.isArray(data)) {
-       return output('Row entered is not in proper format')
-     }
-     var ws = {};
-     var range = {
-       s: {
-         c: 10000000,
-         r: 10000000
-       },
-       e: {
-         c: 0,
-         r: 0
-       }
-     };
-     for (var R = 0; R != data.length; ++R) {
-       for (var C = 0; C != data[R].length; ++C) {
-         if (range.s.r > R) range.s.r = R;
-         if (range.s.c > C) range.s.c = C;
-         if (range.e.r < R) range.e.r = R;
-         if (range.e.c < C) range.e.c = C;
-         var cell = {
-           v: data[R][C]
-         };
-         if (cell.v == null) continue;
-         var cell_ref = XLSX.utils.encode_cell({
-           c: C,
-           r: R
-         });
+  data.forEach((row)=>{
+    //app.logger.info(row)
+    row.forEach((cell, index)=>{
+      var key = excelrange(index+1);
+      worksheet[key + rowNumber] = {
+        "t": isNaN(cell) ? "s" : "n",
+        "v": cell,
+        "h": cell,
+        "w": cell
+      }
+      //app.logger.info((key + rowNumber)  +  cell)
+      ref[1] = (
+        refDefined ?
+        bigger(key, keyPrefix, (index+1)) :
+        (keyPrefix ?
+          keyPrefix
+          : key )
+        )+ rowNumber
+    })
+    ++rowNumber
+  });
 
-         if (typeof cell.v === 'number') cell.t = 'n';
-         else if (typeof cell.v === 'boolean') cell.t = 'b';
-         else if (cell.v instanceof Date) {
-           cell.t = 'n';
-           cell.z = XLSX.SSF._table[14];
-           cell.v = datenum(cell.v);
-         } else cell.t = 's';
+  worksheet['!ref'] = ref.join(':')
+  //app.logger.info(worksheet)
+  XLSX.writeFile(wb, filepath);
+  return cb(null, {
+    result: 'New Row Added'
+  })
 
-         ws[cell_ref] = cell;
-       }
-     }
-     if (range.s.c < 10000000) ws['!ref'] = XLSX.utils.encode_range(range);
-     return ws;
-   }
-
-   /*Through this function we will convert the worksheet (ws)
-     into the workbook format*/
-
-   function Workbook() {
-     if (!(this instanceof Workbook)) return new Workbook();
-     this.SheetNames = [];
-     this.Sheets = {};
-   }
-
-   var wb = new Workbook(),
-     ws = sheet_from_array_of_arrays(data);
-   wb.SheetNames.push(ws_name);
-   wb.Sheets[ws_name] = ws;
-
-
-   format_workbook(path, function(err, wb) {
-
-     Object.keys(wb.Sheets.SheetJS).forEach(function(m) {
-       var len = Object.keys(wb.Sheets.SheetJS);
-
-       if (len[len.length - 1] === m) {
-         delete wb.Sheets.SheetJS[m]
-       }
-     });
-
-     modify_final_workbook(wb, workbook, function(err, workbook) {
-       if (!err) {
-         if (!XLSX.writeFile(workbook, path)) {
-           workbook = XLSX.readFile(path);
-           workbook_new_state = Object.keys(workbook.Sheets[sheet_name]).length;
-           if (workbook_new_state > workbook_old_state) {
-
-             return output(null, {
-               result: 'New Row Added'
-             })
-
-           }
-         }
-       }
-     })
-
-   });
-
-   /*In this function we will first read the spread sheet and the format will be as
-     per workbook standard (wb), which will be taken care by the readFile method of
-    XLSX object.
-    */
-   function format_workbook(path, cb) {
-
-     workbook = XLSX.readFile(path);
-     if (Object.keys(workbook.Sheets[sheet_name]).length < 2) {
-       workbook_old_state = Object.keys(workbook.Sheets[sheet_name]).length;
-       if (!XLSX.writeFile(wb, path)) {
-
-         workbook = XLSX.readFile(path);
-         workbook_new_state = Object.keys(workbook.Sheets[sheet_name]).length;
-         if (workbook_new_state > workbook_old_state) {
-
-           return output(null, {
-             result: 'New Row Added'
-           })
-
-         }
-       }
-     } else {
-
-       workbook_old_state = Object.keys(workbook.Sheets[sheet_name]).length;
-       var key_array = Object.keys(workbook.Sheets[sheet_name]);
-
-       last_column = key_array[key_array.length - 2].split('');
-       check_condition(last_column, cb);
-
-     }
-
-
-   }
-
-   /*This function will check if the row entered at position greater than
-     A10, then this function will get implemented*/
-   function check_condition(last_column, cb) {
-
-     var new_arr = [];
-     if (last_column.length > 2) {
-       for (var i = 1; i < last_column.length; i++) {
-         new_arr.push(last_column[i])
-       }
-       last_column = new_arr.join('');
-
-       delete workbook.Sheets[sheet_name]["!ref"];
-       modifiy_column_name(wb, last_column, cb);
-
-     } else {
-       last_column = last_column[last_column.length - 1];
-
-       delete workbook.Sheets[sheet_name]["!ref"];
-       modifiy_column_name(wb, last_column, cb);
-
-     }
-   }
-
-   /*This function will convert the row we want to add
-     as per the readFile data, which means that if readFile brings the last column as
-     'D9', the modifiy_column_name function will add the new row by first converting from
-     "A1" to A10.*/
-
-   function modifiy_column_name(wb, last_column, cb) {
-
-     Object.keys(wb.Sheets[Object.keys(wb.Sheets)]).forEach(function(m) {
-
-       var val = m.split('');
-
-       var index = val.indexOf(val[val.length - 1]);
-       if (index) {
-
-         val[index] = parseInt(last_column) + 1;
-
-         m_new = val.join('');
-
-         wb.Sheets.SheetJS[m_new] = wb.Sheets.SheetJS[m];
-         delete wb.Sheets.SheetJS[m];
-
-       }
-     });
-
-     return cb(null, wb)
-
-   }
-   /*This function will take care of final formatting of the workbook after adding the new
-     row with the total rows we fetched ftom readFile method and will add the field by manipulating
-     the final workbook eg. "A1:D10", where A1 is the starting column and D10 is the last column.*/
-   function modify_final_workbook(wb, workbook, cb) {
-
-     Object.keys(wb.Sheets.SheetJS).forEach(function(m) {
-         console.log('hello',Object.keys(workbook.Sheets))
-       workbook.Sheets[sheet_name][m] = wb.Sheets.SheetJS[m]
-
-     });
-     var val = Object.keys(workbook.Sheets[sheet_name]);
-
-     var ref = val[0] + ":" + val[val.length - 1];
-     workbook.Sheets[sheet_name]["!ref"] = ref;
-
-     return cb(null, workbook);
-   }
+function bigger(a, b, aVal, bVal){
+if(!aVal){
+  aVal = a.split('').reduce((initial, i, j, k)=>{
+    return (initial + mapAlpha[i] + ((j < (k.length-1)) ? (26 - mapAlpha[i]): 0))
+  }, 0)
+}
+if(!bVal){
+  bVal = b.split('').reduce((initial, i, j, k)=>{
+    return (initial + mapAlpha[i] + ((j < (k.length-1)) ? (26 - mapAlpha[i]): 0))
+  }, 0)
+}
+if(aVal > bVal){
+  return a
+}
+return b
+}
 
 }
 exports.getRows = function(filepath,sheet_name,from_row,to_row,output){

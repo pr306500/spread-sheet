@@ -14,7 +14,7 @@
     ]
   ],
   "_from": "spread_sheet@latest",
-  "_id": "spread_sheet@1.2.1",
+  "_id": "spread_sheet@2.2.1",
   "_inCache": true,
   "_location": "/spread_sheet",
   "_nodeVersion": "6.9.5",
@@ -54,7 +54,8 @@
     "email": "pranjal.sharma306500@gmail.com"
   },
   "dependencies": {
-    "xlsx": "0.10.5"
+    "xlsx": "0.10.5",
+    "excelrange":"0.0.3"
   },
   "description": "Add single row to spreadsheet",
   "devDependencies": {},
@@ -64,9 +65,10 @@
     "tarball": "https://registry.npmjs.org/spread_sheet/-/spread_sheet-1.1.0.tgz"
   },
   "keywords": [
-    "xlsx"
+    "xlsx",
+    "excelrange"
   ],
-  "license": "ISC",
+  "license": "MIT",
   "main": "index.js",
   "maintainers": [
     {
@@ -80,5 +82,5 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "version": "1.2.1"
+  "version": "2.2.1"
 }
